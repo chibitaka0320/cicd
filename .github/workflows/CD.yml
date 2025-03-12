@@ -1,0 +1,57 @@
+name: CD
+
+on: 
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: リポジトリチェックアウト
+      uses: actions/checkout@v4
+
+    - name: JDKセットアップ
+      uses: actions/setup-java@v4
+      with: 
+        distribution: 'temurin'
+        java-version: '17'
+
+    - name: Mavenビルド
+      run: mvn clean package
+
+    - name: warファイルアップロード
+      uses: actions/upload-artifact@v4
+      with:
+        name: cicd
+        path: target/*.war
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリチェックアウト
+        uses: actions/checkout@4
+  
+      - name: warファイルダウンロード
+        uses: actions/download-artifact@v4
+        with:
+          name: cicd
+          path: target/
+  
+      - name: EC2デプロイ
+        env:
+          PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
+          HOST: ${{ secrets.EC2_HOST }}
+          USER: ${{ secrets.EC2_USER }}
+        run: |
+          echo "$PRIVATE_KEY" > cicd.pem
+          chmod 600 cicd.pem
+
+          scp -i cicd.pem target/*.war $USER@$HOST:~
+          ssh -i cicd.pem $USER@$HOST << 'EOF'
+            sudo mv cicd.war /usr/share/tomcat10/webapps/
+          EOF
+
+          rm -f cicd.pem
