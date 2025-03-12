@@ -1,6 +1,6 @@
 name: CD
 
-on: 
+on:
   workflow_dispatch:
 
 jobs:
@@ -8,23 +8,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-	    - name: リポジトリチェックアウト
-	      uses: actions/checkout@v4
-	
-	    - name: JDKセットアップ
-	      uses: actions/setup-java@v4
-	      with: 
-	        distribution: 'temurin'
-	        java-version: '17'
-	
-	    - name: Mavenビルド
-	      run: mvn clean package
-	
-	    - name: warファイルアップロード
-	      uses: actions/upload-artifact@v4
-	      with:
-	        name: cicd
-	        path: target/*.war
+      - name: リポジトリチェックアウト
+        uses: actions/checkout@v4
+
+      - name: JDKセットアップ
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      - name: Mavenビルド
+        run: mvn clean package
+
+      - name: warファイルアップロード
+        uses: actions/upload-artifact@v4
+        with:
+          name: cicd
+          path: target/*.war
 
   deploy:
     needs: build
@@ -33,13 +33,13 @@ jobs:
     steps:
       - name: リポジトリチェックアウト
         uses: actions/checkout@4
-  
+
       - name: warファイルダウンロード
         uses: actions/download-artifact@v4
         with:
           name: cicd
           path: target/
-  
+
       - name: EC2デプロイ
         env:
           PRIVATE_KEY: ${{ secrets.EC2_SSH_KEY }}
