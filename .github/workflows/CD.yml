@@ -24,7 +24,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: cicd
-          path: target/*.war
+          path: target/cicd.war
 
   deploy:
     needs: build
@@ -53,7 +53,7 @@ jobs:
           chmod 700 ~/.ssh
           ssh-keyscan -H $HOST >> ~/.ssh/known_hosts
 
-          scp -i cicd.pem target/*.war $USER@$HOST:~
+          scp -i cicd.pem target/cicd.war $USER@$HOST:~
           ssh -i cicd.pem $USER@$HOST << 'EOF'
             sudo mv cicd.war /usr/share/tomcat10/webapps/
           EOF
